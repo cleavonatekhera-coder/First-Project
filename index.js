@@ -65,7 +65,7 @@ function displayWord(data) {
   const audioUrl = getAudio(data);
 
   audioButton.hidden = !audioUrl;
-  audioButton.textContent = "🔊 Play pronunciation";
+  audioButton.textContent = " Play pronunciation";
 
   audio = audioUrl ? new Audio(audioUrl) : null;
 
@@ -141,7 +141,7 @@ audioButton.addEventListener("click", async function () {
 
   try {
     await audio.play();
-    audioButton.textContent = "♫ Playing...";
+    audioButton.textContent = " Playing...";
   } catch {
     showStatus("Unable to play audio. Please try again.");
   }
@@ -151,7 +151,7 @@ audioButton.addEventListener("click", function () {
   if (!audio) return;
 
   audio.onended = function () {
-    audioButton.textContent = "🔊 Play pronunciation";
+    audioButton.textContent = " Play pronunciation";
   };
 });
 
