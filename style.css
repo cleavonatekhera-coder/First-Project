@@ -1,62 +1,156 @@
+
+* {
+  box-sizing: border-box;
+}
+
 body {
+  margin: 0;
   font-family: Arial, sans-serif;
-  background: #eef2ff;
-  color: #222;
-  padding: 20px;
+  background: #f4f3fb;
+  color: #292641;
+  line-height: 1.6;
 }
 
-.container {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-}
-
-h1 {
-  color: #4f46e5;
+header {
+  background: #6750d8;
+  color: white;
   text-align: center;
+  padding: 25px 15px;
 }
 
-input, button {
-  padding: 10px;
-  margin: 5px;
+header h1 {
+  margin: 0;
+  font-size: 2.3rem;
+}
+
+header p {
+  margin-bottom: 0;
+}
+
+main {
+  width: 90%;
+  max-width: 700px;
+  margin: 35px auto;
+}
+
+form,
+#results {
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.search-box {
+  display: flex;
+  gap: 10px;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  font-size: 1rem;
 }
 
 button {
-  background: #4f46e5;
-  color: white;
+  padding: 12px 18px;
   border: none;
+  border-radius: 7px;
+  background: #6750d8;
+  color: white;
+  font-size: 1rem;
   cursor: pointer;
-  border-radius: 5px;
+  transition: background 0.2s;
 }
 
 button:hover {
-  background: #3730a3;
+  background: #503bb5;
 }
 
-#result, #favorites li {
-  background: #f3f4f6;
-  padding: 12px;
-  margin-top: 10px;
-  border-radius: 5px;
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid #b9afff;
+  outline-offset: 2px;
 }
 
-.dark {
-  background: #222;
-  color: white;
+#status {
+  text-align: center;
+  color: #6750d8;
+  margin: 20px 0;
 }
 
-.dark .container {
-  background: #333;
+#results {
+  margin-top: 20px;
+  overflow-wrap: anywhere;
 }
 
-.dark #result, .dark #favorites li {
-  background: #444;
+#results h2 {
+  color: #6750d8;
+  font-size: 2rem;
+  margin-bottom: 0;
 }
 
-@media (max-width: 500px) {
-  input {
-    max-width: 90%;
+#phonetic {
+  color: #777;
+  font-size: 1.1rem;
+}
+
+#results h3 {
+  margin-top: 25px;
+  border-bottom: 2px solid #eeeaff;
+  padding-bottom: 5px;
+}
+
+.definition {
+  margin-bottom: 15px;
+}
+
+.example {
+  color: #777;
+  font-style: italic;
+}
+
+.synonym {
+  display: inline-block;
+  margin: 4px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: #eeeaff;
+  color: #503bb5;
+}
+
+#synonyms:empty::after {
+  content: "No synonyms available.";
+  color: #777;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .search-box {
+    flex-direction: column;
+  }
+
+  .search-box button {
+    width: 100%;
+  }
+
+  form,
+  #results {
+    padding: 18px;
   }
 }
