@@ -1,77 +1,161 @@
-const form = document.getElementById("searchForm");
-const input = document.getElementById("word");
-const result = document.getElementById("result");
-const message = document.getElementById("message");
-const favorites = document.getElementById("favorites");
 
-let savedWords = JSON.parse(localStorage.getItem("favorites") || "[]");
+const form = document.getElementById("search-form");
+const input = document.getElementById("word-input");
+const status = document.getElementById("status");
+const results = document.getElementById("results");
 
-// Search for a word
-form.addEventListener("submit", async function(event) {
+const wordElement = document.getElementById("word");
+const phoneticElement = document.getElementById("phonetic");
+const definitionsElement = document.getElementById("definitions");
+const synonymsElement = document.getElementById("synonyms");
+const audioButton = document.getElementById("audio-button");
+
+let audio = null;
+
+form.addEventListener("submit", async function (event) {
   event.preventDefault();
 
   const word = input.value.trim();
 
-  if (word === "") {
-    message.textContent = "Please enter a word.";
+  if (!word) {
+    showStatus("Please enter a word.");
     return;
   }
 
-  message.textContent = "Searching...";
+  if (!/^[a-zA-Z]+(?:['-][a-zA-Z]+)*$/.test(word)) {
+    showStatus("Please enter a valid English word.");
+    return;
+  }
+
+  status.textContent = "Searching...";
+  results.hidden = true;
 
   try {
     const response = await fetch(
-      "https://api.dictionaryapi.dev/api/v2/entries/en/hello" 
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
     );
 
     if (!response.ok) {
-      throw new Error("Word not found");
+      if (response.status === 404) {
+        throw new Error("Word not found. Please check the spelling.");
+      }
+
+      throw new Error("Unable to retrieve data. Please try again.");
     }
 
     const data = await response.json();
-    const entry = data[0];
-    const meaning = entry.meanings[0];
-    const definition = meaning.definitions[0];
 
-    result.innerHTML = `
-      <h2>${entry.word}</h2>
-      <p>Pronunciation: ${entry.phonetic || "Not available"}</p>
-      <p>Meaning: ${definition.definition}</p>
-      <p>Part of speech: ${meaning.partOfSpeech}</p>
-      <p>Example: ${definition.example || "No example available"}</p>
-      <p>Synonyms: ${meaning.synonyms?.join(", ") || "None available"}</p>
-      <button id="save">Save Favorite</button>
-    `;
-
-    message.textContent = "";
-
-    // Save the word
-    document.getElementById("save").onclick = function() {
-      if (!savedWords.includes(entry.word)) {
-        savedWords.push(entry.word);
-        localStorage.setItem("favorites", JSON.stringify(savedWords));
-        showFavorites();
-      }
-    };
-
-  } catch {
-    result.innerHTML = "";
-    message.textContent = "Word not found. Try another word.";
+    displayWord(data[0]);
+    status.textContent = "";
+    results.hidden = false;
+  } catch (error) {
+    showStatus(error.message || "A network error occurred.");
   }
 });
 
-// Display favorite words
-function showFavorites() {
-  favorites.innerHTML = "";
+function displayWord(data) {
+  wordElement.textContent = data.word || "Unknown word";
+  phoneticElement.textContent =
+    data.phonetic || getPhonetic(data) || "Pronunciation unavailable.";
 
-  savedWords.forEach(function(word) {
-    favorites.innerHTML += `<li>${word}</li>`;
+  definitionsElement.replaceChildren();
+  synonymsElement.replaceChildren();
+
+  // Find audio pronunciation.
+  const audioUrl = getAudio(data);
+
+  audioButton.hidden = !audioUrl;
+  audioButton.textContent = "🔊 Play pronunciation";
+
+  audio = audioUrl ? new Audio(audioUrl) : null;
+
+  // Display definitions and synonyms.
+  const meanings = data.meanings || [];
+  const allSynonyms = new Set();
+
+  meanings.forEach(function (meaning) {
+    const heading = document.createElement("h4");
+    heading.textContent = meaning.partOfSpeech || "Meaning";
+    definitionsElement.appendChild(heading);
+
+    (meaning.definitions || []).forEach(function (item) {
+      const definition = document.createElement("div");
+      definition.className = "definition";
+
+      const text = document.createElement("p");
+      text.textContent = item.definition || "Definition unavailable.";
+      definition.appendChild(text);
+
+      if (item.example) {
+        const example = document.createElement("p");
+        example.className = "example";
+        example.textContent = `Example: "${item.example}"`;
+        definition.appendChild(example);
+      }
+
+      definitionsElement.appendChild(definition);
+
+      (item.synonyms || []).forEach(function (synonym) {
+        allSynonyms.add(synonym);
+      });
+    });
+
+    (meaning.synonyms || []).forEach(function (synonym) {
+      allSynonyms.add(synonym);
+    });
   });
+
+  if (meanings.length === 0) {
+    definitionsElement.textContent = "No definitions available.";
+  }
+
+  if (allSynonyms.size > 0) {
+    allSynonyms.forEach(function (synonym) {
+      const tag = document.createElement("span");
+      tag.className = "synonym";
+      tag.textContent = synonym;
+      synonymsElement.appendChild(tag);
+    });
+  } else {
+    synonymsElement.textContent = "No synonyms available.";
+  }
 }
 
-// Change the theme
-document.getElementById("theme").onclick = function() {
-  document.body.classList.toggle("dark");
-};
+function getPhonetic(data) {
+  const phonetics = data.phonetics || [];
+  const item = phonetics.find((p) => p.text);
+  return item ? item.text : "";
+}
 
-showFavorites();
+function getAudio(data) {
+  const phonetics = data.phonetics || [];
+  const item = phonetics.find(
+    (p) => p.audio && /^https?:\/\//i.test(p.audio)
+  );
+
+  return item ? item.audio : "";
+}
+
+audioButton.addEventListener("click", async function () {
+  if (!audio) return;
+
+  try {
+    await audio.play();
+    audioButton.textContent = "♫ Playing...";
+  } catch {
+    showStatus("Unable to play audio. Please try again.");
+  }
+});
+
+audioButton.addEventListener("click", function () {
+  if (!audio) return;
+
+  audio.onended = function () {
+    audioButton.textContent = "🔊 Play pronunciation";
+  };
+});
+
+function showStatus(message) {
+  status.textContent = message;
+  results.hidden = true;
+}
